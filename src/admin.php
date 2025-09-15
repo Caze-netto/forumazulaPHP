@@ -1,9 +1,8 @@
 <?php
 session_start();
 require 'conexao.php';
+$erro_login='';
 
-// LOGIN
-$erro_login = '';
 if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_POST['login'])){
     $email=$_POST['email'];
     $stmt=$pdo->prepare("SELECT * FROM utilizadores WHERE email=?");
@@ -11,40 +10,27 @@ if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_POST['login'])){
     $utilizador=$stmt->fetch();
     if($utilizador && password_verify($_POST['password'],$utilizador['palavra_passe'])){
         $_SESSION['logado']=true;
-        header("Location: admin.php"); exit;
-    } else { $erro_login="Credenciais inválidas."; }
+        header("Location:admin.php"); exit;
+    }else{ $erro_login="Credenciais inválidas."; }
 }
 
-// LOGOUT
-if(isset($_GET['logout'])){ session_destroy(); header("Location: admin.php"); exit; }
+if(isset($_GET['logout'])){ session_destroy(); header("Location:admin.php"); exit; }
 
-// CRUD Artigos
 if(isset($_SESSION['logado']) && $_SESSION['logado']===true){
-    // Criar
     if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_POST['criar_artigo'])){
         $titulo=$_POST['titulo'];
         $conteudo=$_POST['conteudo'];
-        if(isset($_FILES['imagem']) && $_FILES['imagem']['error']==0){
-            $caminho_upload='uploads/';
-            if(!is_dir($caminho_upload)) mkdir($caminho_upload,0755,true);
-            $nome_ficheiro=uniqid().'_'.basename($_FILES['imagem']['name']);
-            $caminho_completo=$caminho_upload.$nome_ficheiro;
-            if(move_uploaded_file($_FILES['imagem']['tmp_name'],$caminho_completo)){
-                $conteudo.="\n\n![Imagem do artigo](".htmlspecialchars($caminho_completo).")";
-            }
-        }
         $stmt=$pdo->prepare("INSERT INTO artigos (titulo,conteudo) VALUES (?,?)");
         $stmt->execute([$titulo,$conteudo]);
-        header("Location: admin.php"); exit;
+        header("Location:admin.php"); exit;
     }
 
-    // Excluir
     if(isset($_GET['excluir'])){
         $id_excluir=filter_input(INPUT_GET,'excluir',FILTER_VALIDATE_INT);
         if($id_excluir){
             $stmt=$pdo->prepare("DELETE FROM artigos WHERE id=?");
             $stmt->execute([$id_excluir]);
-            header("Location: admin.php"); exit;
+            header("Location:admin.php"); exit;
         }
     }
 
@@ -86,54 +72,3 @@ if(isset($_SESSION['logado']) && $_SESSION['logado']===true){
 </div>
 
 <div class="admin-layout">
-<form method="POST" enctype="multipart/form-data" class="form-section">
-<h3>Criar Novo Artigo</h3>
-<input type="text" name="titulo" placeholder="Título do artigo" required>
-<label for="conteudo">Conteúdo</label>
-<div class="editor-toolbar">
-<button type="button" class="toolbar-btn" data-action="heading">H2</button>
-<button type="button" class="toolbar-btn" data-action="bold"><b>B</b></button>
-<button type="button" class="toolbar-btn" data-action="italic"><i>I</i></button>
-<button type="button" class="toolbar-btn" data-action="quote">"</button>
-<button type="button" class="toolbar-btn" data-action="code">{}</button>
-<button type="button" class="toolbar-btn" data-action="link">Link</button>
-</div>
-<textarea id="conteudo" name="conteudo" placeholder="Escreva em Markdown..." required></textarea>
-<div>
-<label for="imagem">Anexar Imagem (opcional)</label>
-<input type="file" name="imagem" id="imagem" accept="image/*">
-</div>
-<button type="submit" name="criar_artigo" class="btn">Guardar Artigo</button>
-</form>
-
-<section class="preview-section">
-<h3>Pré-visualização</h3>
-<div id="preview-content"></div>
-</section>
-</div>
-
-<section class="existing-articles">
-<h3>Artigos Existentes</h3>
-<?php if(empty($artigos_existentes)): ?>
-<p>Nenhum artigo publicado.</p>
-<?php else: ?>
-<?php foreach($artigos_existentes as $artigo): ?>
-<div class="article-list-item">
-<div>
-<p class="article-list-item-title"><?= htmlspecialchars($artigo['titulo']) ?></p>
-<p class="article-list-item-date">Publicado em: <?= date("d/m/Y",strtotime($artigo['data_criacao'])) ?></p>
-</div>
-<a href="admin.php?excluir=<?= $artigo['id'] ?>" class="btn btn-delete" onclick="return confirm('Tem a certeza que quer excluir este artigo?');">Excluir</a>
-</div>
-<?php endforeach; ?>
-<?php endif; ?>
-</section>
-</main>
-<?php endif; ?>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script src="admin-ux.js"></script>
-</body>
-</html>
