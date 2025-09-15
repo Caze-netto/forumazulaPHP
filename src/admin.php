@@ -3,6 +3,8 @@ session_start();
 require 'conexao.php';
 
 $erro_login = '';
+
+// === LOGIN ===
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
     $email = $_POST['email'];
     $stmt = $pdo->prepare("SELECT * FROM utilizadores WHERE email = ?");
@@ -17,23 +19,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
     }
 }
 
+// === LOGOUT ===
 if (isset($_GET['logout'])) {
     session_destroy();
     header("Location: admin.php");
     exit;
 }
 
+// === CRUD DE ARTIGOS ===
 if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
-    // Criar novo artigo
+    
+    // Criar artigo
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['criar_artigo'])) {
         $titulo = $_POST['titulo'];
         $conteudo = $_POST['conteudo'];
 
+        // Upload de imagem opcional
         if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == 0) {
             $caminho_upload = 'uploads/';
+            if (!is_dir($caminho_upload)) mkdir($caminho_upload, 0755, true);
             $nome_ficheiro = uniqid() . '_' . basename($_FILES['imagem']['name']);
             $caminho_completo = $caminho_upload . $nome_ficheiro;
-
             if (move_uploaded_file($_FILES['imagem']['tmp_name'], $caminho_completo)) {
                 $conteudo .= "\n\n![Imagem do artigo](" . htmlspecialchars($caminho_completo) . ")";
             }
@@ -56,10 +62,12 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
         }
     }
 
+    // Listar artigos
     $stmt_artigos = $pdo->query("SELECT id, titulo, data_criacao FROM artigos ORDER BY data_criacao DESC");
     $artigos_existentes = $stmt_artigos->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
@@ -70,61 +78,68 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
 </head>
 <body id="admin">
     <header class="site-header">
-        <div class="header-content"><div class="logo"><a href="index.php">ForumAzula</a></div></div>
+        <div class="header-content">
+            <div class="logo"><a href="index.php">ForumAzula</a></div>
+        </div>
     </header>
 
     <div class="container" style="max-width: 1400px;">
-        <?php if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true): ?>
-            <div class="login-container">
-                <h2>Acesso Restrito</h2>
-                <form id="login-form" method="POST" action="admin.php">
-                    <input type="email" name="email" placeholder="Email" required>
-                    <input type="password" name="password" placeholder="Palavra-passe" required>
-                    <?php if($erro_login): ?><p style="color: #e02424;"><?= $erro_login ?></p><?php endif; ?>
-                    <button type="submit" name="login" class="btn">Entrar</button>
-                </form>
+    <?php if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true): ?>
+        <!-- LOGIN -->
+        <div class="login-container">
+            <h2>Acesso Restrito</h2>
+            <form id="login-form" method="POST" action="admin.php">
+                <input type="email" name="email" placeholder="Email" required value="admin@forumazula.com">
+                <input type="password" name="password" placeholder="Palavra-passe" required value="azula123">
+                <?php if($erro_login): ?><p style="color: #e02424;"><?= $erro_login ?></p><?php endif; ?>
+                <button type="submit" name="login" class="btn">Entrar</button>
+            </form>
+        </div>
+    <?php else: ?>
+        <!-- ADMIN -->
+        <main id="admin-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2>Painel de Controlo</h2>
+                <a href="admin.php?logout=true" class="btn btn-delete">Sair</a>
             </div>
-        <?php else: ?>
-            <main id="admin-content">
-                <div class="admin-header">
-                    <h2>Painel de Controlo</h2>
-                    <a href="admin.php?logout=true" class="btn btn-delete">Sair</a>
-                </div>
 
-                <div class="admin-layout">
-                    <!-- Criar Artigo -->
-                    <form method="POST" action="admin.php" class="form-section" enctype="multipart/form-data">
-                        <h3>Criar Novo Artigo</h3>
-                        <input type="text" id="titulo" name="titulo" required placeholder="Título do artigo">
-                        <div>
-                            <label for="conteudo">Conteúdo</label>
-                            <div class="editor-toolbar">
-                                <button type="button" class="toolbar-btn" data-action="heading">H2</button>
-                                <button type="button" class="toolbar-btn" data-action="bold"><b>B</b></button>
-                                <button type="button" class="toolbar-btn" data-action="italic"><i>I</i></button>
-                                <button type="button" class="toolbar-btn" data-action="quote">"</button>
-                                <button type="button" class="toolbar-btn" data-action="code">{}</button>
-                                <button type="button" class="toolbar-btn" data-action="link">Link</button>
-                            </div>
-                            <textarea id="conteudo" name="conteudo" required placeholder="Escreva em Markdown..."></textarea>
+            <div class="admin-layout">
+                <!-- FORMULÁRIO DE CRIAÇÃO -->
+                <form method="POST" action="admin.php" class="form-section" enctype="multipart/form-data">
+                    <h3>Criar Novo Artigo</h3>
+                    <input type="text" id="titulo" name="titulo" required placeholder="Título do artigo">
+                    <div>
+                        <label for="conteudo">Conteúdo</label>
+                        <div class="editor-toolbar">
+                            <button type="button" class="toolbar-btn" data-action="heading">H2</button>
+                            <button type="button" class="toolbar-btn" data-action="bold"><b>B</b></button>
+                            <button type="button" class="toolbar-btn" data-action="italic"><i>I</i></button>
+                            <button type="button" class="toolbar-btn" data-action="quote">"</button>
+                            <button type="button" class="toolbar-btn" data-action="code">{}</button>
+                            <button type="button" class="toolbar-btn" data-action="link">Link</button>
                         </div>
-                        <div class="form-upload-wrapper">
-                            <label for="imagem">Anexar Imagem (opcional)</label>
-                            <input type="file" name="imagem" id="imagem" accept="image/*">
-                        </div>
-                        <button type="submit" name="criar_artigo" class="btn">Guardar Artigo</button>
-                    </form>
+                        <textarea id="conteudo" name="conteudo" required placeholder="Escreva em Markdown..."></textarea>
+                    </div>
+                    <div class="form-upload-wrapper">
+                        <label for="imagem">Anexar Imagem (opcional)</label>
+                        <input type="file" name="imagem" id="imagem" accept="image/*">
+                    </div>
+                    <button type="submit" name="criar_artigo" class="btn">Guardar Artigo</button>
+                </form>
 
-                    <!-- Preview Markdown -->
-                    <section class="preview-section">
-                        <h3>Pré-visualização</h3>
-                        <div id="preview-content" class="artigo-conteudo"></div>
-                    </section>
-                </div>
+                <!-- PRÉ-VISUALIZAÇÃO -->
+                <section class="preview-section">
+                    <h3>Pré-visualização</h3>
+                    <div id="preview-content" class="artigo-conteudo"></div>
+                </section>
+            </div>
 
-                <!-- Artigos existentes -->
-                <section class="existing-articles">
-                    <h3>Gerir Artigos Existentes</h3>
+            <!-- ARTIGOS EXISTENTES -->
+            <section class="existing-articles">
+                <h3>Gerir Artigos Existentes</h3>
+                <?php if(empty($artigos_existentes)): ?>
+                    <p>Nenhum artigo publicado.</p>
+                <?php else: ?>
                     <?php foreach ($artigos_existentes as $artigo): ?>
                         <div class="article-list-item">
                             <div>
@@ -134,9 +149,10 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
                             <a href="admin.php?excluir=<?= $artigo['id'] ?>" class="btn btn-delete" onclick="return confirm('Tem a certeza que quer excluir este artigo?');">Excluir</a>
                         </div>
                     <?php endforeach; ?>
-                </section>
-            </main>
-        <?php endif; ?>
+                <?php endif; ?>
+            </section>
+        </main>
+    <?php endif; ?>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>

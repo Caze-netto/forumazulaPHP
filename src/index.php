@@ -1,11 +1,9 @@
 <?php
 require 'conexao.php';
 
-// Captura datas do filtro
-$data_inicio = filter_input(INPUT_GET, 'data_inicio', FILTER_DEFAULT);
-$data_fim    = filter_input(INPUT_GET, 'data_fim', FILTER_DEFAULT);
+$data_inicio = filter_input(INPUT_GET, 'data_inicio', FILTER_SANITIZE_STRING);
+$data_fim    = filter_input(INPUT_GET, 'data_fim', FILTER_SANITIZE_STRING);
 
-// Monta query
 $query = "SELECT id, titulo, data_criacao FROM artigos";
 $params = [];
 
@@ -23,63 +21,46 @@ $artigos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ForumAzula - Artigos</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForumAzula - Artigos</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body id="index">
-    <header class="site-header">
-        <div class="header-content">
-            <div class="logo"><a href="index.php">ForumAzula</a></div>
-        </div>
-    </header>
-
-    <div class="container">
-        <main>
-            <h1>Artigos Recentes</h1>
-
-            <!-- Formulário de filtro de datas -->
-            <form method="GET" action="index.php" class="filtro-data">
-                <div class="filtro-wrapper">
-                    <label>De:
-                        <input type="date" name="data_inicio" value="<?= htmlspecialchars($data_inicio ?? '') ?>">
-                    </label>
-                    <label>Até:
-                        <input type="date" name="data_fim" value="<?= htmlspecialchars($data_fim ?? '') ?>">
-                    </label>
-                    <button type="submit" class="btn-filtro">Filtrar</button>
-                    <button type="button" id="btn-limpar" class="btn-limpar">Limpar</button>
-                </div>
-            </form>
-
-            <?php if (empty($artigos)): ?>
-                <p>Nenhum artigo publicado nesse período.</p>
-            <?php else: ?>
-                <ul class="lista-artigos">
-                    <?php foreach ($artigos as $artigo): ?>
-                        <li>
-                            <a href="artigo.php?id=<?= $artigo['id'] ?>">
-                                <?= htmlspecialchars($artigo['titulo']) ?>
-                            </a>
-                            <span class="data-artigo">
-                                <?= date("d/m/Y", strtotime($artigo['data_criacao'])) ?>
-                            </span>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
-        </main>
-
-        <footer class="site-footer">
-            <p>&copy; 2025 ForumAzula | <a href="admin.php">Acesso Restrito</a></p>
-        </footer>
+<header class="site-header">
+    <div class="header-content">
+        <div class="logo"><a href="index.php">ForumAzula</a></div>
     </div>
+</header>
 
-    <script>
-        document.getElementById('btn-limpar')?.addEventListener('click', () => {
-            window.location.href = 'index.php';
-        });
-    </script>
+<div class="container">
+    <main>
+        <h1>Artigos Recentes</h1>
+
+        <form method="GET" action="index.php" class="filtro-data">
+            <label>De: <input type="date" name="data_inicio" value="<?= htmlspecialchars($data_inicio ?? '') ?>"></label>
+            <label>Até: <input type="date" name="data_fim" value="<?= htmlspecialchars($data_fim ?? '') ?>"></label>
+            <button type="submit">Filtrar</button>
+            <a href="index.php" class="btn-limpar">Limpar</a>
+        </form>
+
+        <?php if (empty($artigos)): ?>
+            <div class="empty-state"><h3>Nenhum artigo publicado nesse período.</h3></div>
+        <?php else: ?>
+            <div class="posts-list">
+            <?php foreach ($artigos as $artigo): ?>
+                <div class="post-card">
+                    <div class="post-card-meta"><?= date("d/m/Y", strtotime($artigo['data_criacao'])) ?></div>
+                    <h2 class="post-card-title"><a href="artigo.php?id=<?= $artigo['id'] ?>"><?= htmlspecialchars($artigo['titulo']) ?></a></h2>
+                </div>
+            <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 ForumAzula | <a href="admin.php">Acesso Restrito</a></p>
+    </footer>
+</div>
 </body>
 </html>
