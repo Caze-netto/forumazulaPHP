@@ -1,13 +1,16 @@
-<?php
-$host = getenv('DB_HOST') ?: 'localhost';
-$db_name = getenv('DB_NAME') ?: 'forumazula_db';
-$username = getenv('DB_USER') ?: 'root';
-$password = getenv('DB_PASS') ?: 'root';
+CREATE TABLE `artigos` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `titulo` VARCHAR(255) NOT NULL,
+  `conteudo` TEXT NOT NULL,
+  `data_criacao` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db_name;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Erro de conexão: " . $e->getMessage());
-}
-?>
+CREATE TABLE `utilizadores` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `email` VARCHAR(255) NOT NULL UNIQUE,
+  `palavra_passe` VARCHAR(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+INSERT INTO `utilizadores` (`email`, `palavra_passe`) VALUES
+('admin@forumazula.com', '$2y$10$fwhX1.R0pY92n/yctn6g3e5A/TzPb9Dq1o9.vjTCE2NIL2t7/c/C.');
