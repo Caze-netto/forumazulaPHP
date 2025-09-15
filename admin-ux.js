@@ -1,3 +1,4 @@
+// Ficheiro: admin-ux.js
 document.addEventListener('DOMContentLoaded', () => {
     const conteudoInput = document.getElementById('conteudo');
     const preview = document.getElementById('preview-content');
@@ -18,8 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
         conteudoInput.addEventListener('input', () => {
             preview.innerHTML = marked.parse(conteudoInput.value);
         });
+        // Renderiza a pré-visualização inicial
+        preview.innerHTML = marked.parse(conteudoInput.value);
     }
 
+    // Lógica da barra de ferramentas
     toolbar.addEventListener('click', (e) => {
         const button = e.target.closest('.toolbar-btn');
         if (!button) return;
@@ -36,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'bold': markdown = `**${selectedText || 'texto em negrito'}**`; break;
             case 'italic': markdown = `*${selectedText || 'texto em itálico'}*`; break;
             case 'quote': markdown = `> ${selectedText || 'Citação'}\n`; break;
-            case 'code': markdown = '```\n' + (selectedText || 'código') + '\n```'; break;
+            case 'code': markdown = '\n```\n' + (selectedText || 'código') + '\n```\n'; break;
             case 'link': 
                 const url = prompt('Introduza o URL do link:');
                 if (url) markdown = `[${selectedText || 'texto do link'}](${url})`;

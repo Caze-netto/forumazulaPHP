@@ -11,7 +11,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
     $utilizador = $stmt->fetch();
     if ($utilizador && password_verify($_POST['password'], $utilizador['palavra_passe'])) {
         $_SESSION['logado'] = true;
-        $_SESSION['user_id'] = $utilizador['id'];
         header("Location: admin.php");
         exit;
     } else {
@@ -27,8 +26,21 @@ if (isset($_GET['logout'])) {
 
 if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['criar_artigo'])) {
+        $titulo = $_POST['titulo'];
+        $conteudo = $_POST['conteudo'];
+        
+        if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == 0) {
+            $caminho_upload = 'uploads/';
+            $nome_ficheiro = uniqid() . '_' . basename($_FILES['imagem']['name']);
+            $caminho_completo = $caminho_upload . $nome_ficheiro;
+            
+            if (move_uploaded_file($_FILES['imagem']['tmp_name'], $caminho_completo)) {
+                $conteudo .= "\n\n![Imagem do artigo](" . htmlspecialchars($caminho_completo) . ")";
+            }
+        }
+
         $stmt = $pdo->prepare("INSERT INTO artigos (titulo, conteudo) VALUES (?, ?)");
-        $stmt->execute([$_POST['titulo'], $_POST['conteudo']]);
+        $stmt->execute([$titulo, $conteudo]);
         header("Location: admin.php");
         exit;
     }
@@ -64,8 +76,8 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
             <div class="login-container">
                 <h2>Acesso Restrito</h2>
                 <form id="login-form" method="POST" action="admin.php">
-                    <input type="email" name="email" placeholder="Email" required>
-                    <input type="password" name="password" placeholder="Palavra-passe" required>
+                    <input type="email" name="email" placeholder="Email" required value="admin@forumazula.com">
+                    <input type="password" name="password" placeholder="Palavra-passe" required value="azula123">
                     <?php if($erro_login): ?><p style="color: #e02424;"><?= $erro_login ?></p><?php endif; ?>
                     <button type="submit" name="login" class="btn">Entrar</button>
                 </form>
@@ -77,7 +89,7 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
                     <a href="admin.php?logout=true" class="btn btn-delete">Sair</a>
                 </div>
                 <div class="admin-layout">
-                    <form method="POST" action="admin.php" class="form-section">
+                    <form method="POST" action="admin.php" class="form-section" enctype="multipart/form-data">
                         <h3>Criar Novo Artigo</h3>
                         <input type="text" id="titulo" name="titulo" required placeholder="Título do artigo">
                         <div>
@@ -91,6 +103,10 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
                                 <button type="button" class="toolbar-btn" data-action="link">Link</button>
                             </div>
                             <textarea id="conteudo" name="conteudo" required placeholder="Escreva em Markdown..."></textarea>
+                        </div>
+                        <div class="form-upload-wrapper">
+                            <label for="imagem">Anexar Imagem (opcional)</label>
+                            <input type="file" name="imagem" id="imagem" accept="image/*">
                         </div>
                         <button type="submit" name="criar_artigo" class="btn">Guardar Artigo</button>
                     </form>

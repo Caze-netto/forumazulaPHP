@@ -1,15 +1,11 @@
 <?php
 require 'conexao.php';
-
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-
 if (!$id) { header("Location: index.php"); exit; }
-
 $stmt = $pdo->prepare("SELECT titulo, conteudo, data_criacao FROM artigos WHERE id = ?");
 $stmt->execute([$id]);
 $artigo = $stmt->fetch(PDO::FETCH_ASSOC);
 $titulo_pagina = $artigo ? htmlspecialchars($artigo['titulo']) : "Artigo não encontrado";
-
 ?>
 <!DOCTYPE html>
 <html lang="pt-PT">
@@ -54,7 +50,7 @@ $titulo_pagina = $artigo ? htmlspecialchars($artigo['titulo']) : "Artigo não en
             if (conteudoMarkdown) {
                 const conteudoRenderizado = document.getElementById('conteudo-renderizado');
                 conteudoRenderizado.innerHTML = marked.parse(conteudoMarkdown.textContent);
-                document.querySelectorAll('pre code').forEach((block) => {
+                document.querySelectorAll('.artigo-conteudo pre code').forEach((block) => {
                     hljs.highlightBlock(block);
                 });
             }
