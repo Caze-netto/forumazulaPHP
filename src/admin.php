@@ -3,8 +3,8 @@ session_start();
 require 'conexao.php';
 
 $erro_login = '';
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
-    $email = trim($_POST['email']);
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
+    $email = $_POST['email'];
     $stmt = $pdo->prepare("SELECT * FROM utilizadores WHERE email = ?");
     $stmt->execute([$email]);
     $utilizador = $stmt->fetch();
@@ -24,15 +24,16 @@ if (isset($_GET['logout'])) {
 }
 
 if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
+    // Criar novo artigo
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['criar_artigo'])) {
+        $titulo = $_POST['titulo'];
+        $conteudo = $_POST['conteudo'];
 
-    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['criar_artigo'])) {
-        $titulo = trim($_POST['titulo']);
-        $conteudo = trim($_POST['conteudo']);
-
-        if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] === 0) {
+        if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == 0) {
             $caminho_upload = 'uploads/';
             $nome_ficheiro = uniqid() . '_' . basename($_FILES['imagem']['name']);
             $caminho_completo = $caminho_upload . $nome_ficheiro;
+
             if (move_uploaded_file($_FILES['imagem']['tmp_name'], $caminho_completo)) {
                 $conteudo .= "\n\n![Imagem do artigo](" . htmlspecialchars($caminho_completo) . ")";
             }
@@ -44,6 +45,7 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
         exit;
     }
 
+    // Excluir artigo
     if (isset($_GET['excluir'])) {
         $id_excluir = filter_input(INPUT_GET, 'excluir', FILTER_VALIDATE_INT);
         if ($id_excluir) {
@@ -84,12 +86,13 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
             </div>
         <?php else: ?>
             <main id="admin-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div class="admin-header">
                     <h2>Painel de Controlo</h2>
                     <a href="admin.php?logout=true" class="btn btn-delete">Sair</a>
                 </div>
 
                 <div class="admin-layout">
+                    <!-- Criar Artigo -->
                     <form method="POST" action="admin.php" class="form-section" enctype="multipart/form-data">
                         <h3>Criar Novo Artigo</h3>
                         <input type="text" id="titulo" name="titulo" required placeholder="Título do artigo">
@@ -112,14 +115,16 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
                         <button type="submit" name="criar_artigo" class="btn">Guardar Artigo</button>
                     </form>
 
+                    <!-- Preview Markdown -->
                     <section class="preview-section">
                         <h3>Pré-visualização</h3>
                         <div id="preview-content" class="artigo-conteudo"></div>
                     </section>
                 </div>
 
+                <!-- Artigos existentes -->
                 <section class="existing-articles">
-                    <h3 style="margin-top:0;">Gerir Artigos Existentes</h3>
+                    <h3>Gerir Artigos Existentes</h3>
                     <?php foreach ($artigos_existentes as $artigo): ?>
                         <div class="article-list-item">
                             <div>
@@ -133,6 +138,7 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
             </main>
         <?php endif; ?>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <?php if (isset($_SESSION['logado']) && $_SESSION['logado'] === true): ?>
