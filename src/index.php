@@ -1,12 +1,11 @@
 <?php
 require 'conexao.php';
 
-// Captura datas do filtro
 $data_inicio = filter_input(INPUT_GET, 'data_inicio', FILTER_DEFAULT);
 $data_fim    = filter_input(INPUT_GET, 'data_fim', FILTER_DEFAULT);
 
-// Monta query
-$query = "SELECT id, titulo, DATE_FORMAT(data_criacao, '%d/%m/%Y %H:%i') AS data_criacao_formatada FROM artigos";
+$query = "SELECT id, titulo, TO_CHAR(data_criacao, 'DD/MM/YYYY HH24:MI:SS') as data FROM artigos;
+";
 $params = [];
 
 if ($data_inicio && $data_fim) {
@@ -52,7 +51,6 @@ $artigos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <main>
         <h1>Artigos Recentes</h1>
 
-        <!-- Formulário de filtro de datas -->
         <form method="GET" action="index.php" class="filtro-data">
             <div class="filtro-wrapper">
                 <label>De:
