@@ -163,7 +163,6 @@ a:hover { color: var(--color-accent-hover); }
 }
 .notification.show { transform: translateX(0); }
 
-/* --- Barra de Ferramentas --- */
 .editor-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -190,7 +189,6 @@ a:hover { color: var(--color-accent-hover); }
     color: var(--color-text-primary);
 }
 
-/* --- Rodapé --- */
 .site-footer {
   margin-top: 4rem;
   padding: 2rem 0;
