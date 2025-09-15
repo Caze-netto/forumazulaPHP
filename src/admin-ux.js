@@ -1,54 +1,34 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const conteudoInput = document.getElementById('conteudo');
-    const preview = document.getElementById('preview-content');
-    const toolbar = document.querySelector('.editor-toolbar');
+const conteudo = document.getElementById('conteudo');
+const preview = document.getElementById('preview-content');
 
-    if (!conteudoInput || !preview || !toolbar) return;
+function atualizarPreview() {
+    preview.innerHTML = marked.parse(conteudo.value);
+    preview.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+    });
+}
+conteudo.addEventListener('input', atualizarPreview);
+atualizarPreview();
 
-    // Configuração do Marked.js
-    if (typeof marked !== 'undefined') {
-        marked.setOptions({
-            breaks: true,
-            gfm: true,
-            highlight: (code, lang) => {
-                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-                return hljs.highlight(code, { language }).value;
-            }
-        });
-        conteudoInput.addEventListener('input', () => {
-            preview.innerHTML = marked.parse(conteudoInput.value);
-        });
-        preview.innerHTML = marked.parse(conteudoInput.value);
-    }
-
-    // Barra de ferramentas
-    toolbar.addEventListener('click', (e) => {
-        const button = e.target.closest('.toolbar-btn');
-        if (!button) return;
-
-        const action = button.dataset.action;
-        const textarea = conteudoInput;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const selectedText = textarea.value.substring(start, end);
-        let markdown = '';
+document.querySelectorAll('.toolbar-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        const start = conteudo.selectionStart;
+        const end = conteudo.selectionEnd;
+        const text = conteudo.value.substring(start, end);
+        let insert = '';
 
         switch(action) {
-            case 'heading': markdown = `## ${selectedText || 'Título'}`; break;
-            case 'bold': markdown = `**${selectedText || 'texto em negrito'}**`; break;
-            case 'italic': markdown = `*${selectedText || 'texto em itálico'}*`; break;
-            case 'quote': markdown = `> ${selectedText || 'Citação'}\n`; break;
-            case 'code': markdown = '\n```\n' + (selectedText || 'código') + '\n```\n'; break;
-            case 'link':
-                const url = prompt('Introduza o URL do link:');
-                if (url) markdown = `[${selectedText || 'texto do link'}](${url})`;
-                break;
+            case 'heading': insert = `## ${text || 'Título'}`; break;
+            case 'bold': insert = `**${text || 'negrito'}**`; break;
+            case 'italic': insert = `*${text || 'itálico'}*`; break;
+            case 'quote': insert = `> ${text || 'citação'}`; break;
+            case 'code': insert = `\`\`\`\n${text || 'código'}\n\`\`\``; break;
+            case 'link': insert = `[${text || 'texto'}](url)`; break;
         }
 
-        if (markdown) {
-            textarea.setRangeText(markdown, start, end, 'select');
-            textarea.focus();
-            textarea.dispatchEvent(new Event('input'));
-        }
+        conteudo.setRangeText(insert, start, end, 'end');
+        conteudo.focus();
+        atualizarPreview();
     });
 });

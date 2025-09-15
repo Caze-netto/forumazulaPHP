@@ -1,7 +1,6 @@
 <?php
 require 'conexao.php';
 
-// Valida datas de forma segura (YYYY-MM-DD)
 $data_inicio = filter_input(INPUT_GET, 'data_inicio', FILTER_VALIDATE_REGEXP, [
     "options" => ["regexp" => "/^\d{4}-\d{2}-\d{2}$/"]
 ]);
@@ -9,7 +8,6 @@ $data_fim    = filter_input(INPUT_GET, 'data_fim', FILTER_VALIDATE_REGEXP, [
     "options" => ["regexp" => "/^\d{4}-\d{2}-\d{2}$/"]
 ]);
 
-// Monta query dinamicamente
 $query = "SELECT id, titulo, data_criacao FROM artigos";
 $params = [];
 if ($data_inicio && $data_fim) {
@@ -32,17 +30,21 @@ $artigos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="style.css">
 </head>
 <body id="index">
+
 <header class="site-header">
     <div class="header-content">
         <div class="logo"><a href="index.php">ForumAzula</a></div>
     </div>
 </header>
 
+<div class="vertical-progress">
+    <div class="vertical-progress-bar" id="progressBar"></div>
+</div>
+
 <div class="container">
     <main>
         <h1>Artigos Recentes</h1>
 
-        <!-- Formulário de filtro de data -->
         <form method="GET" action="index.php" class="filtro-data">
             <label>De: <input type="date" name="data_inicio" value="<?= htmlspecialchars($data_inicio ?? '') ?>"></label>
             <label>Até: <input type="date" name="data_fim" value="<?= htmlspecialchars($data_fim ?? '') ?>"></label>
@@ -70,5 +72,16 @@ $artigos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <p>&copy; 2025 ForumAzula | <a href="admin.php">Acesso Restrito</a></p>
     </footer>
 </div>
+
+<script>
+const progressBar = document.getElementById('progressBar');
+window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.body.scrollHeight - window.innerHeight;
+    const scrollPercent = (scrollTop / docHeight) * 100;
+    progressBar.style.height = scrollPercent + '%';
+});
+</script>
+
 </body>
 </html>
