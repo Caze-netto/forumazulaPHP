@@ -2,10 +2,9 @@
 session_start();
 require 'conexao.php';
 
-
 $erro_login = '';
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
-    $email = $_POST['email'];
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['login'])) {
+    $email = trim($_POST['email']);
     $stmt = $pdo->prepare("SELECT * FROM utilizadores WHERE email = ?");
     $stmt->execute([$email]);
     $utilizador = $stmt->fetch();
@@ -25,15 +24,15 @@ if (isset($_GET['logout'])) {
 }
 
 if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['criar_artigo'])) {
-        $titulo = $_POST['titulo'];
-        $conteudo = $_POST['conteudo'];
-        
-        if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == 0) {
+
+    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['criar_artigo'])) {
+        $titulo = trim($_POST['titulo']);
+        $conteudo = trim($_POST['conteudo']);
+
+        if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] === 0) {
             $caminho_upload = 'uploads/';
             $nome_ficheiro = uniqid() . '_' . basename($_FILES['imagem']['name']);
             $caminho_completo = $caminho_upload . $nome_ficheiro;
-            
             if (move_uploaded_file($_FILES['imagem']['tmp_name'], $caminho_completo)) {
                 $conteudo .= "\n\n![Imagem do artigo](" . htmlspecialchars($caminho_completo) . ")";
             }
@@ -54,7 +53,7 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
             exit;
         }
     }
-    
+
     $stmt_artigos = $pdo->query("SELECT id, titulo, data_criacao FROM artigos ORDER BY data_criacao DESC");
     $artigos_existentes = $stmt_artigos->fetchAll(PDO::FETCH_ASSOC);
 }
@@ -71,13 +70,14 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
     <header class="site-header">
         <div class="header-content"><div class="logo"><a href="index.php">ForumAzula</a></div></div>
     </header>
+
     <div class="container" style="max-width: 1400px;">
         <?php if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true): ?>
             <div class="login-container">
                 <h2>Acesso Restrito</h2>
                 <form id="login-form" method="POST" action="admin.php">
-                    <input type="email" name="email" placeholder="Email" required value="admin@forumazula.com">
-                    <input type="password" name="password" placeholder="Palavra-passe" required value="azula123">
+                    <input type="email" name="email" placeholder="Email" required>
+                    <input type="password" name="password" placeholder="Palavra-passe" required>
                     <?php if($erro_login): ?><p style="color: #e02424;"><?= $erro_login ?></p><?php endif; ?>
                     <button type="submit" name="login" class="btn">Entrar</button>
                 </form>
@@ -88,6 +88,7 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
                     <h2>Painel de Controlo</h2>
                     <a href="admin.php?logout=true" class="btn btn-delete">Sair</a>
                 </div>
+
                 <div class="admin-layout">
                     <form method="POST" action="admin.php" class="form-section" enctype="multipart/form-data">
                         <h3>Criar Novo Artigo</h3>
@@ -110,11 +111,13 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
                         </div>
                         <button type="submit" name="criar_artigo" class="btn">Guardar Artigo</button>
                     </form>
+
                     <section class="preview-section">
                         <h3>Pré-visualização</h3>
                         <div id="preview-content" class="artigo-conteudo"></div>
                     </section>
                 </div>
+
                 <section class="existing-articles">
                     <h3 style="margin-top:0;">Gerir Artigos Existentes</h3>
                     <?php foreach ($artigos_existentes as $artigo): ?>
