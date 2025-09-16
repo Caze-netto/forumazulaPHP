@@ -1,9 +1,6 @@
 <?php
 require 'conexao.php';
 
-// REMOVIDO: setlocale() não é mais necessário com o novo método.
-// setlocale(LC_TIME, 'pt_PT', 'pt_PT.utf-8', 'pt_BR', 'pt_BR.utf-8', 'portuguese');
-
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$id) { header("Location: index.php"); exit; }
 
@@ -17,13 +14,18 @@ $data_publicacao_formatada = '';
 if ($artigo) {
     $titulo_pagina = htmlspecialchars($artigo['titulo']);
 
-    // MODIFICADO: Usando IntlDateFormatter para formatar a data de forma moderna e correta
-    $formatter = new IntlDateFormatter(
-        'pt_BR', // Locale para Português do Brasil
-        IntlDateFormatter::LONG, // Estilo da data
-        IntlDateFormatter::NONE  // Sem hora
-    );
-    $data_publicacao_formatada = $formatter->format(strtotime($artigo['data_criacao']));
+    // MODIFICADO: Solução universal para data em português que não quebra
+    $timestamp = strtotime($artigo['data_criacao']);
+    
+    // 1. Pega a data com o mês em inglês (ex: 16 de September de 2025)
+    $data_com_mes_em_ingles = date('d \d\e F \d\e Y', $timestamp);
+    
+    // 2. Define a lista de meses para a tradução
+    $meses_ingles = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    $meses_portugues = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    
+    // 3. Substitui o mês em inglês pelo português
+    $data_publicacao_formatada = str_replace($meses_ingles, $meses_portugues, $data_com_mes_em_ingles);
 }
 ?>
 <!DOCTYPE html>

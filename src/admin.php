@@ -26,17 +26,19 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
-// Verifica se o utilizador está logado
+// A partir daqui, o código só executa se o utilizador estiver logado
 if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
     
     // Processa a criação de um novo artigo
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['criar_artigo'])) {
         $titulo = $_POST['titulo'];
         $conteudo = $_POST['conteudo'];
-        $stmt = $pdo->prepare("INSERT INTO artigos (titulo, conteudo) VALUES (?, ?)");
-        $stmt->execute([$titulo, $conteudo]);
-        header("Location: admin.php");
-        exit;
+        if (!empty($titulo) && !empty($conteudo)) {
+            $stmt = $pdo->prepare("INSERT INTO artigos (titulo, conteudo) VALUES (?, ?)");
+            $stmt->execute([$titulo, $conteudo]);
+            header("Location: admin.php");
+            exit;
+        }
     }
 
     // Processa a exclusão de um artigo
@@ -59,7 +61,7 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
     <title>Admin - ForumAzula</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -71,12 +73,13 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
 </header>
 
 <div class="container" style="max-width:1400px;">
+
     <?php // Se o utilizador NÃO estiver logado, mostra o formulário de login ?>
     <?php if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true): ?>
     
     <div class="login-container">
         <h2>Acesso Restrito</h2>
-        <form method="POST" action="admin.php">
+        <form method="POST" action="admin.php" id="login-form">
             <input type="email" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Palavra-passe" required>
             <?php if ($erro_login): ?><p style="color:#e02424;"><?= htmlspecialchars($erro_login) ?></p><?php endif; ?>
@@ -84,7 +87,7 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
         </form>
     </div>
 
-    <?php // Se o utilizador ESTIVER logado, mostra o painel de administração ?>
+    <?php // Se o utilizador ESTIVER logado, mostra o painel de administração completo ?>
     <?php else: ?>
     
     <main id="admin-content">
@@ -95,13 +98,41 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
 
         <div class="admin-layout">
             
-            <?php // O conteúdo do painel (formulários, listas) entraria aqui ?>
+            <section class="form-section">
+                <form method="POST" action="admin.php">
+                    <label for="titulo">Título do Artigo</label>
+                    <input type="text" id="titulo" name="titulo" required placeholder="Um título incrível">
+                    
+                    <label for="conteudo">Conteúdo (suporta Markdown)</label>
+                    <textarea id="conteudo" name="conteudo" rows="20" required placeholder="Escreva seu artigo aqui..."></textarea>
+                    
+                    <button type="submit" name="criar_artigo" class="btn">Publicar Artigo</button>
+                </form>
+            </section>
             
-        </div> <?php // Fim de .admin-layout ?>
-    </main>
+            <section class="existing-articles">
+                <h3>Artigos Publicados</h3>
+                <?php if (empty($artigos_existentes)): ?>
+                    <p>Ainda não há artigos. Crie o seu primeiro!</p>
+                <?php else: ?>
+                    <?php foreach ($artigos_existentes as $artigo): ?>
+                        <div class="article-list-item">
+                            <div>
+                                <p class="article-list-item-title"><?= htmlspecialchars($artigo['titulo']) ?></p>
+                                <p class="article-list-item-date">
+                                    Publicado em: <?= date('d/m/Y H:i', strtotime($artigo['data_criacao'])) ?>
+                                </p>
+                            </div>
+                            <a href="admin.php?excluir=<?= $artigo['id'] ?>" class="btn btn-delete" onclick="return confirm('Tem a certeza que deseja excluir este artigo?');">
+                                Excluir
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </section>
 
-    <?php endif; // <-- ESTA LINHA ESTAVA FALTANDO ?>
-</div> <?php // Fim de .container ?>
+        </div> </main>
 
-</body>
+    <?php endif; ?>
+</div> </body>
 </html>
