@@ -1,4 +1,5 @@
 <?php
+// Arquivo: artigo.php
 require 'conexao.php';
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -7,14 +8,18 @@ if (!$id) {
     exit;
 }
 
-$stmt = $pdo->prepare("
+// Seleciona o artigo, usando TO_CHAR() para formatar a data detalhada no PostgreSQL
+// 'FMMonth' exibe o nome do mês por extenso (respeitando o locale do DB) e 'FM' remove espaços extras.
+// As aspas duplas são necessárias para incluir texto literal na formatação.
+$query = "
     SELECT 
         titulo, 
         conteudo, 
-        DATE_FORMAT(data_criacao, '%d de %M de %Y às %H:%i') AS data_formatada 
+        TO_CHAR(data_criacao, 'DD \"de\" FMMonth \"de\" YYYY \"às\" HH24:MI') AS data_formatada 
     FROM artigos 
     WHERE id = ?
-");
+";
+$stmt = $pdo->prepare($query);
 $stmt->execute([$id]);
 $artigo = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -22,9 +27,6 @@ if (!$artigo) {
     header("Location: index.php");
     exit;
 }
-
-// Define o locale para português para o nome do mês
-$pdo->exec("SET lc_time_names = 'pt_BR'");
 
 $titulo_pagina = htmlspecialchars($artigo['titulo']);
 ?>
@@ -71,17 +73,18 @@ $titulo_pagina = htmlspecialchars($artigo['titulo']);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  
+    // Renderiza o Markdown do artigo
     const markdownContent = document.getElementById('conteudo-markdown')?.textContent;
     const renderTarget = document.getElementById('conteudo-renderizado');
     if (markdownContent && renderTarget) {
         renderTarget.innerHTML = marked.parse(markdownContent);
-       
+        // Aplica o highlight nos blocos de código
         renderTarget.querySelectorAll('pre code').forEach(block => {
             hljs.highlightElement(block);
         });
     }
 
+    // Gerencia a barra de progresso da leitura
     const progressBar = document.querySelector('.reading-progress-bar');
     window.addEventListener('scroll', () => {
         const scrollTop = window.scrollY;

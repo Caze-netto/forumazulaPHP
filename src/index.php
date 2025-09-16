@@ -1,27 +1,31 @@
 <?php
+// Arquivo: index.php
 require 'conexao.php';
 
-
+// Captura e sanitiza os inputs do filtro de datas
 $data_inicio = filter_input(INPUT_GET, 'data_inicio', FILTER_SANITIZE_SPECIAL_CHARS);
 $data_fim    = filter_input(INPUT_GET, 'data_fim', FILTER_SANITIZE_SPECIAL_CHARS);
 
-$query = "SELECT id, titulo, DATE_FORMAT(data_criacao, '%d/%m/%Y') AS data_formatada FROM artigos";
+// Query base para selecionar artigos, usando TO_CHAR() para PostgreSQL
+$query = "SELECT id, titulo, TO_CHAR(data_criacao, 'DD/MM/YYYY') AS data_formatada FROM artigos";
 $params = [];
 $conditions = [];
 
+// Adiciona as condições de data à query se os filtros foram preenchidos
 if ($data_inicio) {
     $conditions[] = "data_criacao >= ?";
-    $params[] = $data_inicio . " 00:00:00";
+    $params[] = $data_inicio; // O tipo de dado 'date' no PostgreSQL aceita o formato 'YYYY-MM-DD'
 }
 if ($data_fim) {
     $conditions[] = "data_criacao <= ?";
-    $params[] = $data_fim . " 23:59:59";
+    $params[] = $data_fim;
 }
 
 if (!empty($conditions)) {
     $query .= " WHERE " . implode(' AND ', $conditions);
 }
 
+// Ordena os artigos do mais recente para o mais antigo
 $query .= " ORDER BY data_criacao DESC";
 
 $stmt = $pdo->prepare($query);
