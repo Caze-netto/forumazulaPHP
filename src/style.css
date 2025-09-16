@@ -19,6 +19,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
+  overflow-y: hidden;
+  overflow-x: auto;
   font-family: var(--font-sans);
   background-color: var(--color-background);
   color: var(--color-text-primary);
