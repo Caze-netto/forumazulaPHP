@@ -1,6 +1,3 @@
-/* ForumAzula - v4.0 "Akita Style" */
-
-/* --- Variáveis Globais --- */
 :root {
     --color-background: #111111;
     --color-surface: #1c1c1c;
@@ -16,16 +13,15 @@
     --border-radius: 6px;
 }
 
-/* --- Reset Básico --- */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* --- Estilos Base --- */
 body {
     font-family: var(--font-sans);
     background-color: var(--color-background);
     color: var(--color-text-primary);
     line-height: 1.7;
-    padding-top: 60px; /* Espaço para o header fixo */
+    padding-top: 60px; 
 }
 
 a {
@@ -41,14 +37,11 @@ h1 {
     margin-bottom: 1rem;
 }
 
-/* --- Layout Principal --- */
 .container {
     max-width: var(--container-width);
     margin: 0 auto;
     padding: 2rem 1.5rem;
-}
 
-/* --- Header Fixo --- */
 .site-header {
     position: fixed;
     top: 0; left: 0;
@@ -70,7 +63,6 @@ h1 {
     font-weight: 500;
 }
 
-/* --- Página Index: Lista de Artigos (Estilo Akita) --- */
 .lista-artigos {
     list-style: none;
     margin-top: 2rem;
@@ -106,7 +98,7 @@ h1 {
     border: 1px solid var(--color-border);
 }
 
-/* --- Filtro de Datas --- */
+
 .filtro-data {
     display: flex;
     gap: 1rem;
@@ -154,10 +146,10 @@ h1 {
 .btn-limpar:hover { background-color: var(--color-surface); border-color: #555; }
 
 
-/* --- Página do Artigo --- */
+
 .reading-progress-bar {
     position: fixed;
-    top: 60px; /* Altura do header */
+    top: 60px; 
     left: 0;
     height: 4px;
     width: 0%;
@@ -207,7 +199,6 @@ h1 {
     font-size: 1rem;
 }
 
-/* --- Footer --- */
 .site-footer {
     margin-top: 4rem;
     padding: 2rem 0;
