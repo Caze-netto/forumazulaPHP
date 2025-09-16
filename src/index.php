@@ -1,18 +1,25 @@
 <?php
 require 'conexao.php';
 
-// Captura datas do filtro
-$data_inicio = filter_input(INPUT_GET, 'data_inicio', FILTER_DEFAULT);
-$data_fim    = filter_input(INPUT_GET, 'data_fim', FILTER_DEFAULT);
 
-// Monta query base
-$query = "SELECT id, titulo, TO_CHAR(data_criacao, 'DD/MM/YYYY') AS data_criacao_formatada FROM artigos";
+$data_inicio = filter_input(INPUT_GET, 'data_inicio', FILTER_SANITIZE_SPECIAL_CHARS);
+$data_fim    = filter_input(INPUT_GET, 'data_fim', FILTER_SANITIZE_SPECIAL_CHARS);
+
+$query = "SELECT id, titulo, DATE_FORMAT(data_criacao, '%d/%m/%Y') AS data_formatada FROM artigos";
 $params = [];
+$conditions = [];
 
-if ($data_inicio && $data_fim) {
-    $query .= " WHERE data_criacao BETWEEN ? AND ?";
+if ($data_inicio) {
+    $conditions[] = "data_criacao >= ?";
     $params[] = $data_inicio . " 00:00:00";
+}
+if ($data_fim) {
+    $conditions[] = "data_criacao <= ?";
     $params[] = $data_fim . " 23:59:59";
+}
+
+if (!empty($conditions)) {
+    $query .= " WHERE " . implode(' AND ', $conditions);
 }
 
 $query .= " ORDER BY data_criacao DESC";
@@ -22,14 +29,15 @@ $stmt->execute($params);
 $artigos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ForumAzula - Artigos</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body id="index">
+<body id="page-index">
+
 <header class="site-header">
     <div class="header-content">
         <div class="logo"><a href="index.php">ForumAzula</a></div>
@@ -40,32 +48,27 @@ $artigos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <main>
         <h1>Artigos Recentes</h1>
 
-        <!-- Formulário de filtro de datas -->
         <form method="GET" action="index.php" class="filtro-data">
-            <div class="filtro-wrapper">
-                <label>De:
-                    <input type="date" name="data_inicio" value="<?= htmlspecialchars($data_inicio ?? '') ?>">
-                </label>
-                <label>Até:
-                    <input type="date" name="data_fim" value="<?= htmlspecialchars($data_fim ?? '') ?>">
-                </label>
-                <button type="submit" class="btn-filtro">Filtrar</button>
-                <button type="button" id="btn-limpar" class="btn-limpar">Limpar</button>
-            </div>
+            <label>De:
+                <input type="date" name="data_inicio" value="<?= htmlspecialchars($data_inicio ?? '') ?>">
+            </label>
+            <label>Até:
+                <input type="date" name="data_fim" value="<?= htmlspecialchars($data_fim ?? '') ?>">
+            </label>
+            <button type="submit" class="btn-filtro">Filtrar</button>
+            <a href="index.php" class="btn-limpar">Limpar</a>
         </form>
 
         <?php if (empty($artigos)): ?>
-            <p>Nenhum artigo publicado nesse período.</p>
+            <p class="nenhum-artigo">Nenhum artigo encontrado para o período selecionado.</p>
         <?php else: ?>
             <ul class="lista-artigos">
                 <?php foreach ($artigos as $artigo): ?>
                     <li>
-                        <a href="artigo.php?id=<?= $artigo['id'] ?>">
+                        <span class="data-artigo"><?= htmlspecialchars($artigo['data_formatada']) ?></span>
+                        <a href="artigo.php?id=<?= $artigo['id'] ?>" class="titulo-artigo">
                             <?= htmlspecialchars($artigo['titulo']) ?>
                         </a>
-                        <span class="data-artigo">
-                            <?= htmlspecialchars($artigo['data_criacao_formatada']) ?>
-                        </span>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -73,15 +76,9 @@ $artigos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </main>
 
     <footer class="site-footer">
-        <p>&copy; 2025 ForumAzula | <a href="admin.php">Acesso Restrito</a></p>
+        <p>&copy; <?= date('Y') ?> ForumAzula | <a href="admin.php">Acesso Restrito</a></p>
     </footer>
 </div>
 
-<script>
-    // Botão limpar filtros
-    document.getElementById('btn-limpar')?.addEventListener('click', () => {
-        window.location.href = 'index.php';
-    });
-</script>
 </body>
 </html>
