@@ -3,21 +3,35 @@ session_start();
 require 'conexao.php';
 $erro_login = '';
 
-// Processa a tentativa de login
+// --- INÍCIO DO PROCESSO DE LOGIN ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
-    $email = $_POST['email'];
+    
+    // CORREÇÃO: Usamos trim() para remover espaços em branco acidentais do email e da senha.
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
+
+    // Busca o utilizador na base de dados pelo email fornecido.
     $stmt = $pdo->prepare("SELECT * FROM utilizadores WHERE email = ?");
     $stmt->execute([$email]);
     $utilizador = $stmt->fetch();
     
-    if ($utilizador && password_verify($_POST['password'], $utilizador['palavra_passe'])) {
+    // A verificação crucial acontece aqui:
+    // 1. A variável $utilizador deve conter dados (ou seja, o email foi encontrado).
+    // 2. A função password_verify() deve confirmar que a senha digitada ($password) corresponde ao hash salvo no banco ($utilizador['palavra_passe']).
+    if ($utilizador && password_verify($password, $utilizador['palavra_passe'])) {
+        
+        // Se as duas condições forem verdadeiras, o login é um sucesso.
         $_SESSION['logado'] = true;
-        header("Location: admin.php");
+        header("Location: admin.php"); // Recarrega a página para mostrar o painel.
         exit;
+
     } else {
+        // Se o email não for encontrado ou a senha não corresponder, define a mensagem de erro.
         $erro_login = "Credenciais inválidas.";
     }
 }
+// --- FIM DO PROCESSO DE LOGIN ---
+
 
 // Processa o logout
 if (isset($_GET['logout'])) {
@@ -61,7 +75,7 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - ForumAzula</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -131,8 +145,11 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
                 <?php endif; ?>
             </section>
 
-        </div> </main>
+        </div> 
+    </main>
 
     <?php endif; ?>
-</div> </body>
+</div>
+
+</body>
 </html>
