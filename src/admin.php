@@ -113,43 +113,75 @@ if (isset($_SESSION['logado']) && $_SESSION['logado'] === true) {
         <div class="admin-layout">
             
             <section class="form-section">
-                <form method="POST" action="admin.php">
+                <form method="POST" action="admin.php" id="article-form">
                     <label for="titulo">Título do Artigo</label>
                     <input type="text" id="titulo" name="titulo" required placeholder="Um título incrível">
                     
                     <label for="conteudo">Conteúdo (suporta Markdown)</label>
-                    <textarea id="conteudo" name="conteudo" rows="20" required placeholder="Escreva seu artigo aqui..."></textarea>
+                    <textarea id="conteudo" name="conteudo" rows="25" required placeholder="Escreva seu artigo aqui..."></textarea>
                     
                     <button type="submit" name="criar_artigo" class="btn">Publicar Artigo</button>
                 </form>
             </section>
             
-            <section class="existing-articles">
-                <h3>Artigos Publicados</h3>
-                <?php if (empty($artigos_existentes)): ?>
-                    <p>Ainda não há artigos. Crie o seu primeiro!</p>
-                <?php else: ?>
-                    <?php foreach ($artigos_existentes as $artigo): ?>
-                        <div class="article-list-item">
-                            <div>
-                                <p class="article-list-item-title"><?= htmlspecialchars($artigo['titulo']) ?></p>
-                                <p class="article-list-item-date">
-                                    Publicado em: <?= date('d/m/Y H:i', strtotime($artigo['data_criacao'])) ?>
-                                </p>
-                            </div>
-                            <a href="admin.php?excluir=<?= $artigo['id'] ?>" class="btn btn-delete" onclick="return confirm('Tem a certeza que deseja excluir este artigo?');">
-                                Excluir
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+            <section class="preview-section">
+                <h3>Preview</h3>
+                <div id="preview-output" class="artigo-conteudo">
+                    <p style="color: var(--color-text-secondary);">O preview do seu artigo aparecerá aqui...</p>
+                </div>
             </section>
 
         </div> 
+        
+        <section class="existing-articles">
+            <h3>Artigos Publicados</h3>
+            <?php if (empty($artigos_existentes)): ?>
+                <p>Ainda não há artigos. Crie o seu primeiro!</p>
+            <?php else: ?>
+                <?php foreach ($artigos_existentes as $artigo): ?>
+                    <div class="article-list-item">
+                        <div>
+                            <p class="article-list-item-title"><?= htmlspecialchars($artigo['titulo']) ?></p>
+                            <p class="article-list-item-date">
+                                Publicado em: <?= date('d/m/Y H:i', strtotime($artigo['data_criacao'])) ?>
+                            </p>
+                        </div>
+                        <a href="admin.php?excluir=<?= $artigo['id'] ?>" class="btn btn-delete" onclick="return confirm('Tem a certeza que deseja excluir este artigo?');">
+                            Excluir
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </section>
+
     </main>
 
     <?php endif; ?>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const editor = document.getElementById('conteudo');
+        const preview = document.getElementById('preview-output');
+
+        // Verifica se os elementos do editor e preview existem na página
+        if (editor && preview) {
+            
+            // Função para atualizar o preview com o conteúdo do editor
+            const updatePreview = () => {
+                const markdownText = editor.value;
+                preview.innerHTML = marked.parse(markdownText);
+            };
+
+            // Adiciona um "ouvinte" que chama a função de update sempre que algo é digitado
+            editor.addEventListener('input', updatePreview);
+
+            // Chama a função uma vez no início para garantir que o preview não comece vazio se houver texto
+            updatePreview();
+        }
+    });
+</script>
 
 </body>
 </html>
